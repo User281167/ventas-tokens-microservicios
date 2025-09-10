@@ -196,4 +196,13 @@ backend/
 ```
 
 Entrar a la carpeta de servicio
+
 uvicorn main:app --reload --port 8000
+
+Desplegar
+
+kubectl apply -f k8s/usuarios-configmap.yaml
+
+kubectl apply -f k8s/usuarios-deployment.yaml
+
+kubectl apply -f k8s/usuarios-service.yaml

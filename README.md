@@ -168,60 +168,29 @@ spec:
 
 ## 🧪 Simular tráfico y fallos
 
-- Puedes usar `kubectl scale deployment` para agregar más réplicas.
-- Puedes “tumbar” un servicio con `kubectl delete pod` y ver cómo Kubernetes lo reinicia.
-- Puedes simular carga con `hey` o `k6` para ver cómo responde tu servicio de tokens.
+- usar `kubectl scale deployment` para agregar más réplicas.
+- “tumbar” un servicio con `kubectl delete pod` y ver cómo Kubernetes lo reinicia.
+- simular carga con `hey` o `k6` para ver cómo responde tu servicio de tokens.
 
-Github
-
-/Backend
-
-/usuario
-
-- api
-- JSON data
-- docker
-- yaml kubernet
-  /producto
-
-- api
-- JSON data
-- docker
-- yaml kubernet
-  /transaccion
-
-- api
-- JSON data
-- docker
-- yaml kubernet
-
-/Frontend
-
-React
-
-UI
-
-- Lista de usuario
-- Tokens
-- Historial
-
+```plaintext
 backend/
 ├── usuarios/
-│ ├── main.py
-│ ├── usuarios.json
-│ ├── Dockerfile
+│   ├── main.py                  # Lógica del microservicio de usuarios
+│   ├── usuarios.json            # Datos simulados de usuarios
+│   ├── Dockerfile               # Imagen Docker para usuarios
 ├── tokens/
-│ ├── main.py
-│ ├── tokens.json
-│ ├── Dockerfile
+│   ├── main.py                  # Lógica del microservicio de tokens
+│   ├── tokens.json              # Datos simulados de tokens
+│   ├── Dockerfile               # Imagen Docker para tokens
 ├── transacciones/
-│ ├── main.py
-│ ├── transacciones.json
-│ ├── Dockerfile
+│   ├── main.py                  # Lógica del microservicio de transacciones
+│   ├── transacciones.json       # Datos simulados de transacciones
+│   ├── Dockerfile               # Imagen Docker para transacciones
 ├── k8s/
-│ ├── usuarios-deployment.yaml
-│ ├── tokens-deployment.yaml
-│ ├── transacciones-deployment.yaml
-│ ├── usuarios-service.yaml
-│ ├── tokens-service.yaml
-│ ├── transacciones-service.yaml
+│   ├── usuarios-deployment.yaml         # Despliegue de usuarios en Kubernetes
+│   ├── tokens-deployment.yaml           # Despliegue de tokens en Kubernetes
+│   ├── transacciones-deployment.yaml    # Despliegue de transacciones en Kubernetes
+│   ├── usuarios-service.yaml            # Service para usuarios
+│   ├── tokens-service.yaml              # Service para tokens
+│   ├── transacciones-service.yaml       # Service para transacciones
+```

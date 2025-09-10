@@ -194,3 +194,6 @@ backend/
 │   ├── tokens-service.yaml              # Service para tokens
 │   ├── transacciones-service.yaml       # Service para transacciones
 ```
+
+Entrar a la carpeta de servicio
+uvicorn main:app --reload --port 8000

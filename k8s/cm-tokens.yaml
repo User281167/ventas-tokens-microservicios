@@ -1,0 +1,12 @@
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tokens-data
+  namespace: token-sale
+data:
+  tokens.json: |
+  [
+    { "id": 101, "nombre": "Gato Cósmico", "imagen": "gato.jpg", "precio": 50, "vendido": false },
+    { "id": 102, "nombre": "Paisaje Lunar", "imagen": "luna.jpg", "precio": 70, "vendido": false }
+  ]

@@ -206,3 +206,16 @@ kubectl apply -f k8s/usuarios-configmap.yaml
 kubectl apply -f k8s/usuarios-deployment.yaml
 
 kubectl apply -f k8s/usuarios-service.yaml
+
+### Construcción de la imagen
+
+
+```bash
+docker build -t tokens-service .
+```
+
+### Ejecución del contenedor
+
+```bash
+docker run -d -p 3002:8000 tokens-service
+```

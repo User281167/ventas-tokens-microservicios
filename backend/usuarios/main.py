@@ -10,6 +10,8 @@ _lock = threading.Lock()
 
 class UserIn(BaseModel):
     nombre: str
+    email: str
+    avatar: str
     saldo: float
 
 
@@ -48,7 +50,7 @@ async def get_user(uid: int):
 async def create_user(u: UserIn):
     users = _read()
     nid = max([x["id"] for x in users] + [0]) + 1
-    user = {"id": nid, "nombre": u.nombre, "saldo": u.saldo}
+    user = {"id": nid, "nombre": u.nombre, "email": u.email, "avatar": u.avatar, "saldo": u.saldo}
     users.append(user)
     _write(users)
     return user

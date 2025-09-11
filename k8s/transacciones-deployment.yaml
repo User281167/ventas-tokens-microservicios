@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: transacciones-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: transacciones
+  template:
+    metadata:
+      labels:
+        app: transacciones
+    spec:
+      containers:
+      - name: transacciones
+        image: transacciones-service:latest
+        imagePullPolicy: Never  # ¡Importante! No intentes descargar la imagen
+        env:
+        - name: DATA_PATH
+          value: /data/transacciones.json
+        - name: USERS_URL
+          value: http://usuarios-svc:8000
+        - name: TOKENS_URL
+          value: http://tokens-svc:8000
+        ports:
+        - containerPort: 8000
+        volumeMounts:
+        - name: shared-data
+          mountPath: /data
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 15
+          periodSeconds: 10
+      volumes:
+      - name: shared-data
+        persistentVolumeClaim:
+          claimName: shared-pvc
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: transacciones-svc
+spec:
+  selector:
+    app: transacciones
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
+  type: ClusterIP

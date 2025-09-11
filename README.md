@@ -1,221 +1,118 @@
-Aplicación web microservicios con kubernets
 
-### 🧱 Microservicios
+---
 
-#### 1. **Servicio de Usuario**
+```markdown
+# 🧱 Aplicación Web con Microservicios (FastAPI + Docker)
+
+Este proyecto está compuesto por tres microservicios independientes que se comunican entre sí mediante HTTP. Cada uno se ejecuta en su propio contenedor Docker.
+
+---
+
+## 🔹 Microservicios
+
+### 1. **Usuarios**
 
 - Archivo: `usuarios.json`
-- Contiene usuarios con ID, nombre, y saldo.
-  json
-
-```
+```json
 [
   { "id": 1, "nombre": "Ana", "saldo": 100 },
   { "id": 2, "nombre": "Luis", "saldo": 150 }
 ]
 ```
 
-#### 2. **Servicio de Producto (Token)**
+### 2. **Tokens**
 
 - Archivo: `tokens.json`
-- Contiene tokens con ID, nombre, imagen, precio y estado.
-  json
-
-```
+```json
 [
   { "id": 101, "nombre": "Gato Cósmico", "imagen": "gato.jpg", "precio": 50, "vendido": false },
   { "id": 102, "nombre": "Paisaje Lunar", "imagen": "luna.jpg", "precio": 70, "vendido": false }
 ]
 ```
 
-Simular trafico en este sercio y agregando otra instancia Pods
-
-#### 3. **Servicio de Transacción**
+### 3. **Transacciones**
 
 - Archivo: `transacciones.json`
-- Registra las compras realizadas.
-  json
-
-```
+```json
 [
   { "id": 1, "usuarioId": 1, "tokenId": 101, "fecha": "2025-09-10T17:00:00Z" }
 ]
 ```
 
-Tumbar este servicio
+---
 
-### 1. **Pods**
+## 📦 Dockerfile básico para cada servicio
 
-- Cada microservicio (Usuario, Producto, Transacción) se ejecuta en su propio **Pod**.
-- Si simulas tráfico en el servicio de Producto y agregas otra instancia, estás creando **réplicas de Pods** para ese servicio.
-- Esto te permite probar **escalabilidad horizontal**: cómo responde tu sistema cuando hay más carga.
-
-### 2. **Services**
-
-- Los **Services** en Kubernetes exponen tus Pods para que puedan comunicarse entre sí o recibir tráfico externo.
-- Por ejemplo, el servicio de Transacción necesita acceder al servicio de Producto para verificar si un token está disponible.
-- Puedes usar un **ClusterIP** para comunicación interna o un **NodePort/LoadBalancer** si quieres exponerlo hacia afuera.
-
-### 3. **ReplicaSets \*\***/ \***\*Deployments**
-
-- Cuando agregas otra instancia del servicio de Producto, lo haces mediante un **Deployment** que gestiona el número de réplicas.
-- Esto te permite simular balanceo de carga y alta disponibilidad.
-
-### 4. **Escenarios \*\***de \***\*fallos**
-
-- Al “tumbar” el servicio de Transacción, estás simulando un **fallo de Pod**.
-- Kubernetes lo detecta y puede reiniciarlo automáticamente si usas un Deployment con política de reinicio.
-- Esto te permite probar la **resiliencia** de tu arquitectura.
-
-### 5. **ConfigMaps \*\***/ \***\*Volumes \*\***(opcional)\*\*
-
-- Si usas archivos JSON como almacenamiento, puedes montarlos como **volúmenes** o usar **ConfigMaps** para inyectar datos estáticos.
-- Aunque no es obligatorio, te da más control sobre cómo se acceden y comparten esos archivos.
-
-## 🧰 Tecnologías recomendadas por servicio
-
-| Componente         | Tecnología sugerida                                      |
-| ------------------ | -------------------------------------------------------- |
-| Microservicios     | **Python + FastAPI**                                     |
-| Comunicación       | <p>**HTTP REST**</p><p> (FastAPI lo maneja muy bien)</p> |
-| Almacenamiento     | <p>**Archivos JSON locales**</p><p> (</p><p>, etc.)</p>  |
-| Contenedores       | <p>**Docker**</p><p> para empaquetar cada servicio</p>   |
-| Orquestación       | <p>**Kubernetes**</p><p> para desplegar y escalar</p>    |
-| Simulación tráfico | <p></p><p></p><p></p>                                    |
-| Logs/monitoring    |                                                          |
-
-## 🐍 Estructura básica de un servicio con FastAPI
-
-python
-
-```
-from fastapi import FastAPI
-import json
-
-app = FastAPI()
-
-@app.get("/tokens")
-def listar_tokens():
-    with open("tokens.json") as f:
-        tokens = json.load(f)
-    return tokens
-```
-
-Empaquetas esto en un contenedor Docker y lo despliegas en Kubernetes.
-
-## 📦 Dockerfile básico para FastAPI
-
-Dockerfile
-
-```
+```dockerfile
 FROM python:3.11-slim
 WORKDIR /app
-COPY . .
-RUN pip install fastapi uvicorn
+
+COPY main.py ./
+COPY data ./data
+
+RUN pip install --no-cache-dir fastapi uvicorn httpx
+
+ENV DATA_PATH=/app/data/<archivo>.json
+EXPOSE 8000
+
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
 ```
 
-## 🚀 Despliegue en Kubernetes
+Reemplaza `<archivo>.json` por el nombre correspondiente: `usuarios.json`, `tokens.json`, o `transacciones.json`.
 
-### 1. **Deployment**
+---
 
-Define cuántas réplicas quieres, qué imagen usar, y cómo iniciar el contenedor.
+## 🚀 Construcción y ejecución
 
-yaml
+Desde la carpeta de cada servicio:
 
-```
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: servicio-producto
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: producto
-  template:
-    metadata:
-      labels:
-        app: producto
-    spec:
-      containers:
-      - name: producto
-        image: tu-imagen:latest
-        ports:
-        - containerPort: 8000
+```bash
+docker build -t <nombre-del-servicio> .
+docker run -d -p <puerto-local>:8000 <nombre-del-servicio>
 ```
 
-### 2. **Service**
+Ejemplos:
 
-Expone el Deployment dentro del clúster.
+```bash
+docker build -t usuarios-service .
+docker run -d -p 3001:8000 usuarios-service
 
-yaml
+docker build -t tokens-service .
+docker run -d -p 3002:8000 tokens-service
 
-```
-apiVersion: v1
-kind: Service
-metadata:
-  name: producto-service
-spec:
-  selector:
-    app: producto
-  ports:
-  - protocol: TCP
-    port: 80
-    targetPort: 8000
-  type: ClusterIP
+docker build -t transacciones-service .
+docker run -d -p 3003:8000 transacciones-service
 ```
 
-## 🧪 Simular tráfico y fallos
+---
 
-- usar `kubectl scale deployment` para agregar más réplicas.
-- “tumbar” un servicio con `kubectl delete pod` y ver cómo Kubernetes lo reinicia.
-- simular carga con `hey` o `k6` para ver cómo responde tu servicio de tokens.
+## 📂 Estructura del proyecto
 
-```plaintext
+```
 backend/
 ├── usuarios/
-│   ├── main.py                  # Lógica del microservicio de usuarios
-│   ├── usuarios.json            # Datos simulados de usuarios
-│   ├── Dockerfile               # Imagen Docker para usuarios
+│   ├── main.py
+│   ├── usuarios.json
+│   ├── Dockerfile
 ├── tokens/
-│   ├── main.py                  # Lógica del microservicio de tokens
-│   ├── tokens.json              # Datos simulados de tokens
-│   ├── Dockerfile               # Imagen Docker para tokens
+│   ├── main.py
+│   ├── tokens.json
+│   ├── Dockerfile
 ├── transacciones/
-│   ├── main.py                  # Lógica del microservicio de transacciones
-│   ├── transacciones.json       # Datos simulados de transacciones
-│   ├── Dockerfile               # Imagen Docker para transacciones
-├── k8s/
-│   ├── usuarios-deployment.yaml         # Despliegue de usuarios en Kubernetes
-│   ├── tokens-deployment.yaml           # Despliegue de tokens en Kubernetes
-│   ├── transacciones-deployment.yaml    # Despliegue de transacciones en Kubernetes
-│   ├── usuarios-service.yaml            # Service para usuarios
-│   ├── tokens-service.yaml              # Service para tokens
-│   ├── transacciones-service.yaml       # Service para transacciones
+│   ├── main.py
+│   ├── transacciones.json
+│   ├── Dockerfile
 ```
 
-Entrar a la carpeta de servicio
+---
 
-uvicorn main:app --reload --port 8000
-
-Desplegar
-
-kubectl apply -f k8s/usuarios-configmap.yaml
-
-kubectl apply -f k8s/usuarios-deployment.yaml
-
-kubectl apply -f k8s/usuarios-service.yaml
-
-### Construcción de la imagen
-
+## ✅ Pruebas básicas
 
 ```bash
-docker build -t tokens-service .
+curl http://localhost:3001/health
+curl http://localhost:3002/tokens
+curl http://localhost:3003/tx
 ```
 
-### Ejecución del contenedor
+---
 
-```bash
-docker run -d -p 3002:8000 tokens-service
-```

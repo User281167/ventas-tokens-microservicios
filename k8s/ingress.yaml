@@ -1,0 +1,32 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: token-ing
+  namespace: token-sale
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: tokens.local
+      http:
+        paths:
+          - path: /api/usuarios
+            pathType: Prefix
+            backend:
+              service:
+                name: usuarios-svc
+                port:
+                  number: 8000
+          - path: /api/tokens
+            pathType: Prefix
+            backend:
+              service:
+                name: tokens-svc
+                port:
+                  number: 8000
+          - path: /api/tx
+            pathType: Prefix
+            backend:
+              service:
+                name: transacciones-svc
+                port:
+                  number: 8000

@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tokens-deploy
+  namespace: token-sale
+spec:
+  replicas: 1 # lo escalaremos para simular tráfico
+  selector:
+    matchLabels: { app: tokens }
+  template:
+    metadata:
+      labels: { app: tokens }
+    spec:
+      initContainers:
+        - name: seed
+          image: busybox
+          command: ["sh", "-c", "cp /config/tokens.json /data/tokens.json"]
+          volumeMounts:
+            - name: cfg
+              mountPath: /config
+            - name: data
+              mountPath: /data
+      containers:
+        - name: tokens
+          image: tokens-svc:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: DATA_PATH
+              value: "/app/data/tokens.json"
+          ports:
+            - containerPort: 8000
+          livenessProbe:
+            httpGet: { path: /health, port: 8000 }
+            initialDelaySeconds: 3
+          readinessProbe:
+            httpGet: { path: /health, port: 8000 }
+            initialDelaySeconds: 2
+          volumeMounts:
+            - name: data
+              mountPath: /app/data
+      volumes:
+        - name: cfg
+          configMap: { name: tokens-data }
+        - name: data
+          emptyDir: {}
+---
+# k8s/svc-tokens.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: tokens-svc
+  namespace: token-sale
+spec:
+  selector: { app: tokens }
+  ports:
+    - port: 8000
+      targetPort: 8000

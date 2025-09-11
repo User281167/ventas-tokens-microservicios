@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: transacciones-deploy
+  namespace: token-sale
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: transacciones }
+  template:
+    metadata:
+      labels: { app: transacciones }
+    spec:
+      containers:
+        - name: transacciones
+          image: transacciones-svc:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: DATA_PATH
+              value: "/app/data/transacciones.json"
+            - name: USERS_URL
+              value: "http://usuarios-svc.token-sale.svc.cluster.local:8000"
+            - name: TOKENS_URL
+              value: "http://tokens-svc.token-sale.svc.cluster.local:8000"
+          ports:
+            - containerPort: 8000
+          livenessProbe:
+            httpGet: { path: /health, port: 8000 }
+            initialDelaySeconds: 3
+          readinessProbe:
+            httpGet: { path: /health, port: 8000 }
+            initialDelaySeconds: 2
+          volumeMounts:
+            - name: data
+              mountPath: /app/data
+      volumes:
+        - name: data
+          emptyDir: {}
+---
+# k8s/svc-transacciones.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: transacciones-svc
+  namespace: token-sale
+spec:
+  selector: { app: transacciones }
+  ports:
+    - port: 8000
+      targetPort: 8000

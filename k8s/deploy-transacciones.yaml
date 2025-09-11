@@ -6,11 +6,32 @@ metadata:
 spec:
   replicas: 2
   selector:
-    matchLabels: { app: transacciones }
+    matchLabels:
+      app: transacciones
   template:
     metadata:
-      labels: { app: transacciones }
+      labels:
+        app: transacciones
     spec:
+      # Copia semilla desde el ConfigMap (si existe) al volumen de datos
+      initContainers:
+        - name: seed
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - >
+              if [ -f /config/transacciones.json ]; then
+                cp /config/transacciones.json /data/transacciones.json;
+              else
+                echo "No seed file found; starting with empty data.";
+              fi
+          volumeMounts:
+            - name: cfg
+              mountPath: /config
+            - name: data
+              mountPath: /data
+
       containers:
         - name: transacciones
           image: transacciones-svc:latest
@@ -19,32 +40,33 @@ spec:
             - name: DATA_PATH
               value: "/app/data/transacciones.json"
             - name: USERS_URL
-              value: "http://usuarios-svc.token-sale.svc.cluster.local:8000"
+              value: "http://usuarios-svc:8000"
             - name: TOKENS_URL
-              value: "http://tokens-svc.token-sale.svc.cluster.local:8000"
+              value: "http://tokens-svc:8000"
           ports:
             - containerPort: 8000
           livenessProbe:
-            httpGet: { path: /health, port: 8000 }
+            httpGet:
+              path: /health
+              port: 8000
             initialDelaySeconds: 3
+            periodSeconds: 10
           readinessProbe:
-            httpGet: { path: /health, port: 8000 }
+            httpGet:
+              path: /health
+              port: 8000
             initialDelaySeconds: 2
+            periodSeconds: 5
           volumeMounts:
             - name: data
               mountPath: /app/data
+
       volumes:
+        # ConfigMap opcional: si no existe, el pod igual levanta (queda sin seed)
+        - name: cfg
+          configMap:
+            name: transacciones-data
+            optional: true
+        # Volumen de trabajo donde se escribe transacciones.json
         - name: data
           emptyDir: {}
----
-# k8s/svc-transacciones.yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: transacciones-svc
-  namespace: token-sale
-spec:
-  selector: { app: transacciones }
-  ports:
-    - port: 8000
-      targetPort: 8000

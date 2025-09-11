@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: transacciones-data
+  namespace: token-sale
+data:
+  transacciones.json: |
+    [
+      { "id": 1, "usuarioId": 1, "tokenId": 101, "fecha": "2025-09-10T17:00:00Z" }
+    ]

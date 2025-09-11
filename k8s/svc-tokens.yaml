@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: tokens-svc
+  namespace: token-sale
+spec:
+  selector: { app: tokens }
+  ports:
+    - port: 8000
+      targetPort: 8000
+  type: ClusterIP
